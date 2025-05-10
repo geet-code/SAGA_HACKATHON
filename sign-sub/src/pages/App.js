@@ -1,91 +1,84 @@
 import React, { useState, useRef, useEffect } from 'react';
-import * as handpose from '@tensorflow-models/handpose';
-import '@tensorflow/tfjs';
 import '../App.css';
 
-function App() {
+export default function App() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [outputText, setOutputText] = useState('(No text detected yet)');
   const [history, setHistory] = useState('(Empty)');
-  const [model, setModel] = useState(null);
-  const [message, setMessage] = useState('Initializing webcam...');
   const [isRunning, setIsRunning] = useState(false);
-  const [backendStatus, setBackendStatus] = useState('Checking backend...');
+  const [message, setMessage] = useState('Initializing webcam...');
+  const [backendStatus, setBackendStatus] = useState('Checking backend…');
 
+  // 1) Ping backend & start camera
   useEffect(() => {
-    // Ping Flask server to check connection
     fetch("http://localhost:5000/ping")
-      .then(res => res.json())
-      .then(data => {
-        console.log("Flask says:", data.message);
-        setBackendStatus(data.message);
+      .then((r) => r.json())
+      .then((d) => setBackendStatus(d.message))
+      .catch(() => setBackendStatus("Backend unreachable"));
+
+    navigator.mediaDevices
+      .getUserMedia({ video: true })
+      .then((stream) => {
+        videoRef.current.srcObject = stream;
+        setMessage('Webcam ready. Click “Start Detection.”');
       })
-      .catch(err => {
-        console.error("Flask connection failed:", err);
-        setBackendStatus("Flask backend not reachable.");
-      });
-
-    // Load model and start camera
-    const loadModelAndCamera = async () => {
-      try {
-        const loadedModel = await handpose.load();
-        setModel(loadedModel);
-        console.log('Handpose model loaded');
-
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-
-        setMessage('Webcam ready. Click "Start Detection".');
-      } catch (error) {
-        console.error('Error:', error);
-        setMessage(`Error: ${error.message}`);
-      }
-    };
-
-    loadModelAndCamera();
+      .catch((err) => setMessage(`Camera error: ${err.message}`));
   }, []);
 
   const detectHandSigns = async () => {
-    if (!model || !videoRef.current) {
-      console.warn('Model or video not ready');
-      return;
-    }
+    if (!isRunning) return; // Prevent detection if isRunning is false
 
     const ctx = canvasRef.current.getContext('2d');
-    ctx.drawImage(videoRef.current, 0, 0, 320, 240);
+    ctx.drawImage(videoRef.current, 0, 0, 128, 128);
+    const base64 = canvasRef.current.toDataURL('image/jpeg');
 
     try {
-      const predictions = await model.estimateHands(videoRef.current);
-      if (predictions.length > 0) {
-        const detectedSign = 'A'; // Placeholder — replace with real classification logic
-        setOutputText(prev => prev === '(No text detected yet)' ? detectedSign : prev + detectedSign);
-        setHistory(prev => prev === '(Empty)' ? detectedSign : prev + detectedSign);
+      const res = await fetch("http://localhost:5000/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: base64 }),
+      });
+
+      if (!res.ok) throw new Error(`Status ${res.status}`);
+      const { class: cls } = await res.json();
+
+      // Add logging to check if the backend returns the correct class
+      console.log("Prediction received:", cls);
+
+      // Validate class index is within A-Z range (0-25)
+      if (cls >= 0 && cls <= 25) {
+        const letter = String.fromCharCode(65 + cls); // Convert to A-Z letter
+        setOutputText((prev) =>
+          prev === '(No text detected yet)' ? letter : prev + letter
+        );
+        setHistory((prev) =>
+          prev === '(Empty)' ? letter : prev + letter
+        );
+      } else {
+        console.log("Invalid class detected:", cls); // Invalid class debug
       }
     } catch (err) {
       console.error('Prediction error:', err);
     }
 
+    // Only call detectHandSigns again if detection is still running
     if (isRunning) {
-      requestAnimationFrame(detectHandSigns);
+      setTimeout(detectHandSigns, 1000);
     }
   };
 
+  // 3) Controls
   const startDetection = () => {
-    if (!model) {
-      alert("Model not yet loaded. Please wait.");
-      return;
-    }
     setOutputText('');
     setHistory('');
     setIsRunning(true);
-    detectHandSigns();
+    detectHandSigns(); // Start detection immediately after setting isRunning to true
   };
 
   const stopDetection = () => {
-    setIsRunning(false);
+    setIsRunning(false); // This will prevent further frames from being processed
+    setOutputText('Detection Stopped');
   };
 
   const clearText = () => {
@@ -96,29 +89,38 @@ function App() {
   return (
     <div className="app-container">
       <h1>Sign SUB</h1>
-      <h3>The VIDEO TO TEXT CONVERTOR.</h3>
+      <h3>The VIDEO‑TO‑TEXT Converter</h3>
 
       <div className="message">{message}</div>
-      <div className="message"><strong>Backend:</strong> {backendStatus}</div>
+      <div className="message">
+        <strong>Backend:</strong> {backendStatus}
+      </div>
 
       <div className="container">
         <div className="video-section">
-          <p><strong>Camera Feed:</strong></p>
           <video ref={videoRef} autoPlay playsInline muted width="320" height="240" />
-          <canvas ref={canvasRef} width="320" height="240" style={{ display: 'none' }} />
-
+          <canvas ref={canvasRef} width="128" height="128" style={{ display: 'none' }} />
           <div className="buttons">
-            <button onClick={startDetection} className="green" disabled={!model}>Start Detection</button>
-            <button onClick={stopDetection} className="red" disabled={!isRunning}>Stop Detection</button>
-            <button onClick={clearText} className="blue">Clear Text</button>
+            <button onClick={startDetection} className="green">
+              Start Detection
+            </button>
+            <button onClick={stopDetection} className="red" disabled={!isRunning}>
+              Stop Detection
+            </button>
+            <button onClick={clearText} className="blue">
+              Clear Text
+            </button>
           </div>
         </div>
 
         <div className="output-section">
-          <p><strong>Detected Text:</strong></p>
+          <p>
+            <strong>Detected Text:</strong>
+          </p>
           <div className="output">{outputText}</div>
-
-          <p><strong>Recognition History:</strong></p>
+          <p>
+            <strong>Recognition History:</strong>
+          </p>
           <div className="history">{history}</div>
         </div>
       </div>
@@ -126,17 +128,12 @@ function App() {
       <div className="instructions">
         <h3>How to use:</h3>
         <ol>
-          <li>Allow camera access when prompted</li>
-          <li>Click "Start Detection" to begin sign language recognition</li>
-          <li>Make ASL hand signs in front of the camera</li>
-          <li>The detected letters will appear in the text area</li>
-          <li>Click "Stop Detection" to pause</li>
-          <li>Click "Clear Text" to reset</li>
+          <li>Allow camera access</li>
+          <li>Click “Start Detection”</li>
+          <li>Make signs</li>
+          <li>Stop or clear as needed</li>
         </ol>
-        <p><em>Note: This demo uses placeholder logic. Integrate actual classification for sign detection.</em></p>
       </div>
     </div>
   );
 }
-
-export default App;
