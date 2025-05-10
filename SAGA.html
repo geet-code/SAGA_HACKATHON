@@ -3,83 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>Sign Language to Text Converter</title>
+  <link rel="stylesheet" href="./SAGA.CSS">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      font-family: sans-serif;
-      max-width: 960px;
-      margin: auto;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-    }
-    .container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-    }
-    .video-section, .output-section {
-      flex: 1;
-      min-width: 300px;
-      background: #f3f4f6;
-      padding: 15px;
-      border-radius: 8px;
-    }
-    video {
-      width: 100%;
-      border-radius: 8px;
-    }
-    canvas {
-      display: none;
-    }
-    .buttons {
-      margin-top: 10px;
-      display: flex;
-      gap: 10px;
-    }
-    button {
-      padding: 8px 12px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    button:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
-    .green { background-color: #10b981; color: white; }
-    .red { background-color: #ef4444; color: white; }
-    .blue { background-color: #3b82f6; color: white; }
-    .output {
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      min-height: 50px;
-      padding: 10px;
-      margin-bottom: 10px;
-    }
-    .history {
-      background: white;
-      border: 1px solid #ccc;
-      height: 100px;
-      overflow-y: auto;
-      padding: 10px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-    }
-    .history span {
-      background: #dbeafe;
-      padding: 4px 8px;
-      border-radius: 4px;
-    }
-    .instructions {
-      background: #fef9c3;
-      padding: 15px;
-      margin-top: 20px;
-      border-radius: 8px;
-    }
+   
   </style>
 </head>
 <body>
