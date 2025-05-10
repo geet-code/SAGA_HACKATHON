@@ -11,8 +11,22 @@ function App() {
   const [model, setModel] = useState(null);
   const [message, setMessage] = useState('Initializing webcam...');
   const [isRunning, setIsRunning] = useState(false);
+  const [backendStatus, setBackendStatus] = useState('Checking backend...');
 
   useEffect(() => {
+    // Ping Flask server to check connection
+    fetch("http://localhost:5000/ping")
+      .then(res => res.json())
+      .then(data => {
+        console.log("Flask says:", data.message);
+        setBackendStatus(data.message);
+      })
+      .catch(err => {
+        console.error("Flask connection failed:", err);
+        setBackendStatus("Flask backend not reachable.");
+      });
+
+    // Load model and start camera
     const loadModelAndCamera = async () => {
       try {
         const loadedModel = await handpose.load();
@@ -85,6 +99,7 @@ function App() {
       <h3>The VIDEO TO TEXT CONVERTOR.</h3>
 
       <div className="message">{message}</div>
+      <div className="message"><strong>Backend:</strong> {backendStatus}</div>
 
       <div className="container">
         <div className="video-section">
