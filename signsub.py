@@ -11,7 +11,15 @@ if model is None:
     print("Exiting program due to model loading failure.")
     exit(1)
 
-class_labels = ["Hello", "Yes", "No", "Thanks"]  # Update with your actual class labels
+# Update class_labels to match the model's output classes
+class_labels = [
+    "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", 
+    "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z","DELETE", "SPACE",
+    "NOTHING"
+]
+
+print("Model output shape:", model.output_shape)  # Debugging: Check output shape
+print("Number of class labels:", len(class_labels))
 
 # === MediaPipe Setup ===
 mp_hands = mp.solutions.hands
@@ -76,7 +84,10 @@ def update_frame():
                     prediction = model.predict(input_img, verbose=0)
                     predicted_label = class_labels[np.argmax(prediction)]
                     confidence = np.max(prediction)
-                    all_predictions.append(f"{predicted_label} ({confidence:.2f})")
+                    if confidence > 0.5:  # Adjust threshold as needed
+                        all_predictions.append(f"{predicted_label} ({confidence:.2f})")
+                    else:
+                        all_predictions.append("Low confidence")
                 except Exception as e:
                     print("Prediction error:", e)
                     all_predictions.append("Error")
