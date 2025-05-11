@@ -13,4 +13,4 @@ Team members :
 
 PROJECT-NAME : SIGN-SUB.
 
-About our Project : This project aims to help the hearing impaired people 
+About our Project : This project aims to help the hearing impaired people
