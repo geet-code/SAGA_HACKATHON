@@ -1,7 +1,7 @@
 # SAGA_HACKATHON
 This project is made during HACKSRIT hackathon that took place in Shri Ram Institute of Teachnology, Jabalpur(M.P).
 
-Hacakathon Problem Statemnt :
+Hacakathon Problem Statement :
 "MAKE A SOFTWARE ON AI WITH AI"
 Team SAGA 
 
