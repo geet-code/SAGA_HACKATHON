@@ -1,5 +1,5 @@
 # SAGA_HACKATHON
-"जय हिन्द" This project is made during HACKSRIT hackathon that took place in Shri Ram Institute of Teachnology, Jabalpur(M.P).
+This project is made during HACKSRIT hackathon that took place in Shri Ram Institute of Teachnology, Jabalpur(M.P).
 
 Hacakathon Problem Stataemnt :
 "MAKE A SOFTWARE ON AI WITH AI"
